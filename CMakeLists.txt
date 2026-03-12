@@ -17,7 +17,7 @@ include(JUCEDefaults)
 # This is the internal name of the project and the name of JUCE's shared code target
 # Note: This cannot have spaces (it may be 2024, but you can't have it all!)
 # Worry not, JUCE's PRODUCT_NAME can have spaces (and is what DAWs display)
-set(PROJECT_NAME "Pamplejuce")
+set(PROJECT_NAME "KeyDetect")
 
 # Worry not, JUCE's PRODUCT_NAME can have spaces (and is what DAWs will display)
 # You can also just have it be the same thing as PROJECT_NAME
@@ -25,17 +25,17 @@ set(PROJECT_NAME "Pamplejuce")
 #   set(PROJECT_NAME "MyPlugin_v${MAJOR_VERSION}")
 # Doing so enables major versions to show up in IDEs and DAWs as separate plugins
 # allowing you to change parameters and behavior without breaking existing user projects
-set(PRODUCT_NAME "Pamplejuce Demo")
+set(PRODUCT_NAME "Key Detect")
 
 # Change me! Used for the MacOS bundle name and Installers
-set(COMPANY_NAME "Pamplejuce Company")
+set(COMPANY_NAME "Seho Young")
 
 # Change me! Used for the MacOS bundle identifier (and signing)
-set(BUNDLE_ID "com.pamplejuce.pamplejuce")
+set(BUNDLE_ID "com.sehoyoung.keydetect")
 
 # Change me! Set the plugin formats you want built
 # Valid choices: AAX Unity VST VST3 AU AUv3 Standalone
-set(FORMATS Standalone AU VST3 AUv3)
+set(FORMATS Standalone VST3)
 
 # Force JUCE to work with sccache
 # instruct MSVC to embed debug info (/Z7) instead of emitting a .pdb
@@ -52,7 +52,7 @@ project(${PROJECT_NAME} VERSION ${CURRENT_VERSION})
 add_subdirectory(JUCE)
 
 # Add CLAP format
-add_subdirectory(modules/clap-juce-extensions EXCLUDE_FROM_ALL)
+# add_subdirectory(modules/clap-juce-extensions EXCLUDE_FROM_ALL)
 
 # Add any other modules you want modules here, before the juce_add_plugin call
 # juce_add_module(modules/my_module)
@@ -71,31 +71,37 @@ juce_add_plugin("${PROJECT_NAME}"
 
     # On MacOS, plugin is copied to /Users/yourname/Library/Audio/Plug-Ins/
     COPY_PLUGIN_AFTER_BUILD TRUE
+    VST3_COPY_DIR "C:/Program Files/Common Files/VST3"
 
     # Change me!
     # A four-character plugin id
     # First character MUST be uppercase for AU formats
-    PLUGIN_MANUFACTURER_CODE Pamp
+    PLUGIN_MANUFACTURER_CODE Seho
 
     # Change me!
     # A unique four-character plugin id
     # Note: this must have at least one upper-case character
-    PLUGIN_CODE P001
+    PLUGIN_CODE Keyd
     FORMATS "${FORMATS}"
 
     # The name of your final executable
     # This is how it's listed in the DAW
     # This can be different from PROJECT_NAME and can have spaces!
     # You might want to use v${MAJOR_VERSION} here once you go to v2...
-    PRODUCT_NAME "${PRODUCT_NAME}")
+    PRODUCT_NAME "${PRODUCT_NAME}"
+
+    IS_SYNTH FALSE
+    NEEDS_MIDI_INPUT FALSE
+    NEEDS_MIDI_OUTPUT FALSE
+)
 
 # This lets us use our code in both the JUCE targets and our Test target
 # Without running into ODR violations
 add_library(SharedCode INTERFACE)
 
-clap_juce_extensions_plugin(TARGET "${PROJECT_NAME}"
-    CLAP_ID "${BUNDLE_ID}"
-    CLAP_FEATURES audio-effect)
+# clap_juce_extensions_plugin(TARGET "${PROJECT_NAME}"
+#    CLAP_ID "${BUNDLE_ID}"
+#    CLAP_FEATURES audio-effect)
 
 # Enable fast math, C++20 and a few other target defaults
 include(SharedCodeDefaults)
@@ -113,7 +119,7 @@ target_sources(SharedCode INTERFACE ${SourceFiles})
 include(Assets)
 
 # MacOS only: Cleans up folder and target organization on Xcode.
-include(XcodePrettify)
+# include(XcodePrettify)
 
 # This is where you can set preprocessor definitions for JUCE and your plugin
 target_compile_definitions(SharedCode
@@ -132,7 +138,7 @@ target_compile_definitions(SharedCode
     VERSION="${CURRENT_VERSION}"
 
     # JucePlugin_Name is for some reason doesn't use the nicer PRODUCT_NAME
-    PRODUCT_NAME_WITHOUT_VERSION="Pamplejuce"
+    PRODUCT_NAME_WITHOUT_VERSION="KeyDetect"
 )
 
 # Link to any other modules you added (with juce_add_module) here!

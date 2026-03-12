@@ -2,6 +2,10 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 
+#include "FFT.h"
+#include "ChordDetect.h"
+
+
 #if (MSVC)
 #include "ipps.h"
 #endif
@@ -38,6 +42,26 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
+    void createSpectogram (juce::Path&, const juce::Rectangle<int>);
+
+    juce::AudioProcessorValueTreeState& getState() { return state; }
+    juce::UndoManager& getUndoManager() { return undoManager; }
+    std::atomic<float>* getDetectThreshold() { return detectThreshold; }
+    FFT& getFFT() { return fft; }
+    ChordDetect& getChordDetect() { return cd; }
+
+    inline static float negInfinityDb { -80.0f };
+
 private:
+    juce::AudioProcessorValueTreeState::ParameterLayout createParameters();
+
+    juce::AudioProcessorValueTreeState state;
+    juce::UndoManager undoManager;
+
+    std::atomic<float>* detectThreshold;
+
+    FFT fft;
+    ChordDetect cd;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginProcessor)
 };

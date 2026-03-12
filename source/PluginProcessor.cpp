@@ -10,12 +10,15 @@ PluginProcessor::PluginProcessor()
                       #endif
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
-                       )
-{
-}
+                       ),
+      state (*this, &undoManager, "parameters", createParameters()),
+      detectThreshold (state.getRawParameterValue ("detectThreshold")),
+      cd (fft, detectThreshold)
+{}
 
 PluginProcessor::~PluginProcessor()
 {
+    fft.stopThread (1000);
 }
 
 //==============================================================================
@@ -88,13 +91,15 @@ void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
-    juce::ignoreUnused (sampleRate, samplesPerBlock);
+    fft.setup (int (sampleRate), float (sampleRate), negInfinityDb);
+    cd.setup (negInfinityDb);
 }
 
 void PluginProcessor::releaseResources()
 {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
+    fft.stopThread (1000);
 }
 
 bool PluginProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
@@ -143,12 +148,30 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     // the samples and the outer loop is handling the channels.
     // Alternatively, you can process the samples with the channels
     // interleaved by keeping the same state.
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        auto* channelData = buffer.getWritePointer (channel);
-        juce::ignoreUnused (channelData);
-        // ..do something to the data...
-    }
+    //for (int channel = 0; channel < totalNumInputChannels; ++channel)
+    //{
+    //    auto* channelData = buffer.getWritePointer (channel);
+    //    juce::ignoreUnused (channelData);
+    //    // ..do something to the data...
+    //}
+
+    // Take average of left and right channels to pass to FFT
+    //const int numSamples = buffer.getNumSamples();
+
+    //// Get pointers to the left (0) and right (1) channels
+    //auto* leftChannel = buffer.getWritePointer (0);
+    //auto* rightChannel = buffer.getWritePointer (1);
+
+    //std::vector<float> monoBuffer (numSamples);
+
+    //for (int i = 0; i < numSamples; ++i)
+    //{
+    //    monoBuffer[i] = (leftChannel[i] + rightChannel[i]) * 0.5f;
+    //}
+
+    //fft.process (monoBuffer);
+
+    fft.addAudioData (buffer, 0, totalNumInputChannels);
 }
 
 //==============================================================================
@@ -165,17 +188,22 @@ juce::AudioProcessorEditor* PluginProcessor::createEditor()
 //==============================================================================
 void PluginProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    // You should use this method to store your parameters in the memory block.
-    // You could do that either as raw data, or use the XML or ValueTree classes
-    // as intermediaries to make it easy to save and load complex data.
-    juce::ignoreUnused (destData);
+    auto stateCopy = state.copyState();
+    std::unique_ptr<juce::XmlElement> xml (stateCopy.createXml());
+    copyXmlToBinary (*xml, destData);
 }
 
 void PluginProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    // You should use this method to restore your parameters from this memory block,
-    // whose contents will have been created by the getStateInformation() call.
-    juce::ignoreUnused (data, sizeInBytes);
+    std::unique_ptr<juce::XmlElement> xmlState (getXmlFromBinary (data, sizeInBytes));
+    if (xmlState.get() != nullptr)
+        if (xmlState->hasTagName (state.state.getType()))
+            state.replaceState (juce::ValueTree::fromXml (*xmlState));
+}
+
+void PluginProcessor::createSpectogram (juce::Path& p, const juce::Rectangle<int> bounds)
+{
+    fft.createPath (p, bounds);
 }
 
 //==============================================================================
@@ -183,4 +211,26 @@ void PluginProcessor::setStateInformation (const void* data, int sizeInBytes)
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new PluginProcessor();
+}
+
+juce::AudioProcessorValueTreeState::ParameterLayout PluginProcessor::createParameters()
+{
+    std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
+
+    // FFT Window Size
+    //params.push_back (std::make_unique<juce::AudioParameterChoice> (
+    //    juce::ParameterID { "fftWindowSize" },
+    //    "Window Size",
+    //    juce::StringArray { "128", "256", "512", "1024", "2048", "4096", "8192" },
+    //    0));
+
+    // Detection Threshold
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID { "detectThreshold" },
+        "Threshold",
+        juce::NormalisableRange<float> (negInfinityDb, 0, 0.01),
+        -40.0f
+    ));
+
+    return { params.begin(), params.end() };
 }
