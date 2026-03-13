@@ -203,7 +203,7 @@ void PluginProcessor::setStateInformation (const void* data, int sizeInBytes)
 
 void PluginProcessor::createSpectogram (juce::Path& p, const juce::Rectangle<int> bounds)
 {
-    fft.createPath (p, bounds);
+    fft.createPath (p, bounds); 
 }
 
 //==============================================================================

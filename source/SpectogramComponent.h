@@ -55,18 +55,12 @@ public:
 
         g.reduceClipRegion (plotFrame);
 
-        juce::Colour colors[3] = {
-            juce::Colour::fromRGBA (235, 87, 87, 120),
-            juce::Colour::fromRGBA (235, 161, 87, 120),
-            juce::Colour::fromRGBA (235, 230, 87, 120)
-        };
-
         const auto factor = plotFrame.getWidth() / 10.0f;
         const int highlightWidth = 10;
 
         for (int i = 0; i < highlightedX.size(); ++i)
         {
-            g.setColour (colors[i]);
+            g.setColour (ChordComponent::bandColors[i]);
 
             for (int j = 0; j < highlightedX[i].size(); ++j)
             {

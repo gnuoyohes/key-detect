@@ -9,7 +9,7 @@ public:
         slider.setSliderStyle (juce::Slider::Rotary);
         slider.setTextBoxStyle (juce::Slider::TextBoxBelow, true, 80, 30);
         slider.setTextBoxIsEditable (true);
-        slider.setTextValueSuffix (" Db");
+        slider.setTextValueSuffix (" dB");
         addAndMakeVisible (slider);
 
         label.setFont (juce::Font (14.0f, juce::Font::bold));
@@ -25,12 +25,39 @@ public:
 
     ~ChordComponent() {}
 
+    static inline const juce::Colour bandColors[3] = {
+        juce::Colour::fromRGBA (235, 87, 87, 120),
+        juce::Colour::fromRGBA (235, 161, 87, 120),
+        juce::Colour::fromRGBA (235, 230, 87, 120)
+    };
+
     //==============================================================================
     void paint (juce::Graphics& g) override
     {
         g.setFont (60.0f);
-        g.setColour (juce::Colours::silver);
+        g.setColour (juce::Colours::white);
         g.drawFittedText (chord, 0, 0, getWidth(), getHeight(), juce::Justification::centred, 1);
+
+        int bandLabelPadding = 10;
+        int bandLabelHeight = 20;
+        g.setFont (18.0f);
+        for (int i = 0; i < std::size(bandColors); ++i)
+        {
+            g.setColour (bandColors[i].withAlpha(1.0f));
+            juce::String text = "ROOT";
+            switch (i)
+            {
+                case 1:
+                    text = "THIRD";
+                    break;
+                case 2:
+                    text = "FIFTH";
+                    break;
+            }
+            g.drawFittedText (text, bandLabelPadding, bandLabelPadding + bandLabelHeight * i, 80, 50, juce::Justification::centred, 1);
+        }
+        
+
     }
 
     void resized() override
