@@ -1,3 +1,3 @@
 # Key Detect
 
-Analyzes the fourier transform of incoming audio to detect keys/harmonies.
+Analyzes the frequencies present in incoming audio to detect keys/harmonies.
