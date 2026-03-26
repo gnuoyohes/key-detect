@@ -121,23 +121,22 @@ jobs:
           7z x pluginval_${{ runner.os }}.zip
           ${{ matrix.pluginval-binary }} --strictness-level 10 --verbose --validate "${{ env.VST3_PATH }}"
 
-      - name: Import Certificates (macOS)
-        uses: sudara/basic-macos-keychain-action@v1
-        id: keychain
-        if: ${{ runner.os == 'macOS'}}
-        with:
-          dev-id-app-cert: ${{ secrets.DEV_ID_APP_CERT }}
-          dev-id-app-password: ${{ secrets.DEV_ID_APP_PASSWORD }}
-          dev-id-installer-cert: ${{ secrets.DEV_ID_INSTALLER_CERT }}
-          dev-id-installer-password: ${{ secrets.DEV_ID_INSTALLER_PASSWORD }}
+      # - name: Import Certificates (macOS)
+      #   uses: sudara/basic-macos-keychain-action@v1
+      #   id: keychain
+      #   if: ${{ runner.os == 'macOS'}}
+      #   with:
+      #     dev-id-app-cert: ${{ secrets.DEV_ID_APP_CERT }}
+      #     dev-id-app-password: ${{ secrets.DEV_ID_APP_PASSWORD }}
+      #     dev-id-installer-cert: ${{ secrets.DEV_ID_INSTALLER_CERT }}
+      #     dev-id-installer-password: ${{ secrets.DEV_ID_INSTALLER_PASSWORD }}
 
-      - name: Codesign (macOS)
-        if: ${{ runner.os == 'macOS' }}
-        timeout-minutes: 5
-        run: |
-          # Each plugin must be code signed
-          codesign --force --keychain ${{ steps.keychain.outputs.keychain-path }} -s "${{ secrets.DEVELOPER_ID_APPLICATION}}" -v "${{ env.VST3_PATH }}" --deep --strict --options=runtime --timestamp
-          codesign --force --keychain ${{ steps.keychain.outputs.keychain-path }} -s "${{ secrets.DEVELOPER_ID_APPLICATION}}" -v "${{ env.STANDALONE_PATH }}" --deep --strict --options=runtime --timestamp
+      # - name: Codesign (macOS)
+      #   if: ${{ runner.os == 'macOS' }}
+      #   timeout-minutes: 5
+      #   run: |
+      #     codesign --force --keychain ${{ steps.keychain.outputs.keychain-path }} -s "${{ secrets.DEVELOPER_ID_APPLICATION}}" -v "${{ env.VST3_PATH }}" --deep --strict --options=runtime --timestamp
+      #     codesign --force --keychain ${{ steps.keychain.outputs.keychain-path }} -s "${{ secrets.DEVELOPER_ID_APPLICATION}}" -v "${{ env.STANDALONE_PATH }}" --deep --strict --options=runtime --timestamp
 
       - name: Add Custom Icons (macOS)
         if: ${{ runner.os == 'macOS' }}
@@ -167,10 +166,10 @@ jobs:
 
           cd packaging
           envsubst < distribution.xml.template > distribution.xml
-          productbuild --resources ./resources --distribution distribution.xml --sign "${{ secrets.DEVELOPER_ID_INSTALLER }}" --timestamp "${{ env.ARTIFACT_NAME }}.pkg"
+          productbuild --resources ./resources --distribution distribution.xml --timestamp "${{ env.ARTIFACT_NAME }}.pkg"
 
-          xcrun notarytool submit "${{ env.ARTIFACT_NAME }}.pkg" --apple-id ${{ secrets.NOTARIZATION_USERNAME }} --password ${{ secrets.NOTARIZATION_PASSWORD }} --team-id ${{ secrets.TEAM_ID }} --wait
-          xcrun stapler staple "${{ env.ARTIFACT_NAME }}.pkg"
+          # xcrun notarytool submit "${{ env.ARTIFACT_NAME }}.pkg" --apple-id ${{ secrets.NOTARIZATION_USERNAME }} --password ${{ secrets.NOTARIZATION_PASSWORD }} --team-id ${{ secrets.TEAM_ID }} --wait
+          # xcrun stapler staple "${{ env.ARTIFACT_NAME }}.pkg"
 
       - name: Zip
         if: ${{ runner.os == 'Linux' }}
